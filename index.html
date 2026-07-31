@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบบริหารงานและบูรณาการองค์กร (GRC)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <?!= include('Stylesheet'); ?>
+</head>
+<body class="font-sans text-gray-900 antialiased overflow-hidden">
+  
+  <!-- Loading & Toast -->
+  <div id="loading-spinner" class="fixed inset-0 bg-white/60 backdrop-blur-md z-[60] flex items-center justify-center hidden">
+    <div class="flex flex-col items-center p-8 rounded-2xl bg-white/80 shadow-2xl">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-600 mb-4"></div>
+      <span class="text-lg font-bold text-green-800">กำลังประมวลผล...</span>
+    </div>
+  </div>
+  <div id="toast-container"></div>
+
+  <?!= include('Page-Login'); ?>
+
+  <div id="main-app" class="hidden flex h-screen w-full">
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 hidden transition-opacity duration-300"></div>
+
+    <!-- 1. Include Navbar (Fixed Top) -->
+    <?!= include('Navbar'); ?>
+
+    <!-- 2. Include Sidebar (Fixed Left, below Navbar) -->
+    <?!= include('Sidebar'); ?>
+
+    <!-- 3. Main Content (Adjusted padding-top for Navbar) -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden relative pt-16">
+      
+      <!-- Scrollable Main -->
+      <main class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
+        <div class="max-w-7xl mx-auto space-y-6">
+          
+          <!-- Breadcrumb / Info Bar (Optional) -->
+          <div id="module-banner" class="hidden glass-panel p-4 rounded-xl mb-6 bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg flex justify-between items-center">
+             <div>
+                <h2 id="module-banner-title" class="text-xl font-bold">Overview Dashboard</h2>
+                <p id="module-banner-desc" class="text-green-100 text-sm">ภาพรวมการดำเนินงาน GRC ทั้งหมด</p>
+             </div>
+             <div id="module-banner-icon" class="p-3 bg-white/20 rounded-full backdrop-blur-sm">
+                <hero-icon name="squares-2x2" class="w-8 h-8 text-white"></hero-icon>
+             </div>
+          </div>
+
+          <?!= include('Page-Dashboard'); ?>
+          <?!= include('Page-Departments'); ?>
+          <?!= include('Page-Reporting'); ?>
+          <?!= include('Page-WatchingList'); ?>
+          <?!= include('Page-Planning'); ?>
+          <?!= include('Page-Files'); ?> <!-- เพิ่มบรรทัดนี้ -->
+        </div>
+        <div class="h-20 md:h-0"></div>
+      </main>
+    </div>
+  </div>
+
+  <?!= include('JavaScript'); ?>
+</body>
+</html>
