@@ -1,65 +1,493 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบบริหารงานและบูรณาการองค์กร (GRC)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <?!= include('Stylesheet'); ?>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRC Enterprise Dashboard V2</title>
+    
+    <!-- CSS Framework & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Phosphor Icons (Modern Minimalist Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 1rem; }
+        .soft-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.01); }
+        
+        /* Loading Overlay */
+        #loading-overlay { transition: opacity 0.3s ease; }
+        .loader { border: 4px solid #f3f4f6; border-top: 4px solid #059669; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body class="font-sans text-gray-900 antialiased overflow-hidden">
-  
-  <!-- Loading & Toast -->
-  <div id="loading-spinner" class="fixed inset-0 bg-white/60 backdrop-blur-md z-[60] flex items-center justify-center hidden">
-    <div class="flex flex-col items-center p-8 rounded-2xl bg-white/80 shadow-2xl">
-      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-600 mb-4"></div>
-      <span class="text-lg font-bold text-green-800">กำลังประมวลผล...</span>
+<body class="text-slate-800 antialiased overflow-hidden flex h-screen">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+        <div class="loader mb-4"></div>
+        <p class="text-slate-600 font-medium">กำลังโหลดข้อมูลองค์กร...</p>
     </div>
-  </div>
-  <div id="toast-container"></div>
 
-  <?!= include('Page-Login'); ?>
-
-  <div id="main-app" class="hidden flex h-screen w-full">
-    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 hidden transition-opacity duration-300"></div>
-
-    <!-- 1. Include Navbar (Fixed Top) -->
-    <?!= include('Navbar'); ?>
-
-    <!-- 2. Include Sidebar (Fixed Left, below Navbar) -->
-    <?!= include('Sidebar'); ?>
-
-    <!-- 3. Main Content (Adjusted padding-top for Navbar) -->
-    <div class="flex-1 flex flex-col h-screen overflow-hidden relative pt-16">
-      
-      <!-- Scrollable Main -->
-      <main class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
-        <div class="max-w-7xl mx-auto space-y-6">
-          
-          <!-- Breadcrumb / Info Bar (Optional) -->
-          <div id="module-banner" class="hidden glass-panel p-4 rounded-xl mb-6 bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg flex justify-between items-center">
-             <div>
-                <h2 id="module-banner-title" class="text-xl font-bold">Overview Dashboard</h2>
-                <p id="module-banner-desc" class="text-green-100 text-sm">ภาพรวมการดำเนินงาน GRC ทั้งหมด</p>
-             </div>
-             <div id="module-banner-icon" class="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                <hero-icon name="squares-2x2" class="w-8 h-8 text-white"></hero-icon>
-             </div>
-          </div>
-
-          <?!= include('Page-Dashboard'); ?>
-          <?!= include('Page-Departments'); ?>
-          <?!= include('Page-Reporting'); ?>
-          <?!= include('Page-WatchingList'); ?>
-          <?!= include('Page-Planning'); ?>
-          <?!= include('Page-Files'); ?> <!-- เพิ่มบรรทัดนี้ -->
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
+        <div class="h-16 flex items-center px-6 border-b border-slate-100">
+            <i class="ph-fill ph-shield-check text-2xl text-emerald-600 mr-2"></i>
+            <h1 class="text-lg font-bold text-slate-800">GRC <span class="text-emerald-600">Pro</span></h1>
         </div>
-        <div class="h-20 md:h-0"></div>
-      </main>
-    </div>
-  </div>
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="#" onclick="UI.navigate('dashboard')" class="nav-btn active flex items-center px-4 py-3 text-sm font-medium rounded-xl bg-emerald-50 text-emerald-700 transition-colors">
+                <i class="ph ph-squares-four text-lg mr-3"></i> ภาพรวม (Dashboard)
+            </a>
+            <a href="#" onclick="UI.navigate('report')" class="nav-btn flex items-center px-4 py-3 text-sm font-medium rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors">
+                <i class="ph ph-note-pencil text-lg mr-3"></i> รายงานผล (Reporting)
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-100">
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold mr-3">U</div>
+                <div class="text-sm">
+                    <p class="font-semibold text-slate-800">เจ้าหน้าที่ GRC</p>
+                    <p class="text-xs text-slate-500">ส่วนกลาง</p>
+                </div>
+            </div>
+        </div>
+    </aside>
 
-  <?!= include('JavaScript'); ?>
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <!-- Topbar (Mobile support) -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 shrink-0">
+            <div class="flex items-center md:hidden">
+                <i class="ph-fill ph-shield-check text-2xl text-emerald-600 mr-2"></i>
+                <h1 class="text-lg font-bold">GRC Pro</h1>
+            </div>
+            <div class="ml-auto flex items-center space-x-4">
+                <button onclick="App.refreshData()" class="text-slate-400 hover:text-emerald-600 transition-colors" title="รีเฟรชข้อมูล">
+                    <i class="ph ph-arrows-clockwise text-xl"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Area -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="max-w-7xl mx-auto space-y-6">
+                
+                <!-- VIEW: Dashboard -->
+                <div id="view-dashboard" class="view-section">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">ภาพรวมเชิงลึก (Deep Analytics)</h2>
+                        <p class="text-slate-500 text-sm mt-1">ติดตามสถานะการดำเนินงาน GRC ปีงบประมาณ 2569</p>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="glass-card p-5 border-l-4 border-emerald-500">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">ความก้าวหน้าภาพรวม</p>
+                            <h3 class="text-3xl font-bold text-emerald-700 mt-2" id="kpi-progress">0%</h3>
+                        </div>
+                        <div class="glass-card p-5 border-l-4 border-blue-500">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">กิจกรรมทั้งหมด</p>
+                            <h3 class="text-3xl font-bold text-blue-700 mt-2" id="kpi-total">0</h3>
+                        </div>
+                        <div class="glass-card p-5 border-l-4 border-amber-500">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">แผนสะสม (เดือนปัจจุบัน)</p>
+                            <h3 class="text-3xl font-bold text-amber-700 mt-2" id="kpi-plan">0</h3>
+                        </div>
+                        <div class="glass-card p-5 border-l-4 border-teal-500">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">ผลสะสม (เดือนปัจจุบัน)</p>
+                            <h3 class="text-3xl font-bold text-teal-700 mt-2" id="kpi-result">0</h3>
+                        </div>
+                    </div>
+
+                    <!-- Charts Area -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="glass-card p-6 lg:col-span-2">
+                            <h3 class="font-bold text-slate-800 mb-4">แนวโน้มการดำเนินงานตามไตรมาส (Q1-Q4)</h3>
+                            <div class="h-64"><canvas id="quarterChart"></canvas></div>
+                        </div>
+                        <div class="glass-card p-6">
+                            <h3 class="font-bold text-slate-800 mb-4">สัดส่วนตามนโยบาย</h3>
+                            <div class="h-64"><canvas id="categoryChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: Reporting -->
+                <div id="view-report" class="view-section hidden">
+                    <div class="mb-6 flex justify-between items-end">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800">รายงานผลการดำเนินงาน</h2>
+                            <p class="text-slate-500 text-sm mt-1" id="report-month-label">ประจำเดือน ...</p>
+                        </div>
+                        <div class="flex bg-slate-100 p-1 rounded-lg">
+                            <button onclick="UI.filterReport('pending')" id="btn-filter-pending" class="px-4 py-1.5 text-sm font-medium rounded-md bg-white shadow text-slate-800">รอรายงาน</button>
+                            <button onclick="UI.filterReport('done')" id="btn-filter-done" class="px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 hover:text-slate-700">รายงานแล้ว</button>
+                        </div>
+                    </div>
+
+                    <div id="report-list" class="space-y-4">
+                        <!-- รายการจะถูก Render ที่นี่ -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Report Form -->
+    <div id="modal-report" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="modal-report-content">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800">บันทึกผลการดำเนินงาน</h3>
+                <button onclick="UI.closeModal()" class="text-slate-400 hover:text-red-500"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <form onsubmit="App.submitReport(event)" class="p-6 space-y-4">
+                <input type="hidden" id="form-row-id">
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">กิจกรรม</label>
+                    <p class="text-sm font-medium text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100" id="form-activity-name">-</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">รายละเอียดผลการดำเนินงาน <span class="text-red-500">*</span></label>
+                    <textarea id="form-details" required class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition-shadow" rows="3" placeholder="ระบุรายละเอียดที่ได้ดำเนินการ..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">ปัญหา/อุปสรรค (ถ้ามี)</label>
+                    <textarea id="form-reason" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-sm transition-shadow" rows="2" placeholder="ระบุสาเหตุความล่าช้า..."></textarea>
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="UI.closeModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-colors">ยกเลิก</button>
+                    <button type="submit" id="btn-submit" class="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors flex justify-center items-center">
+                        <i class="ph-bold ph-floppy-disk mr-2"></i> บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alert Toast (Micro-interaction) -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded-xl shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-[70] flex items-center">
+        <i class="ph-fill ph-check-circle text-emerald-400 text-xl mr-3" id="toast-icon"></i>
+        <span id="toast-msg" class="font-medium text-sm">ทำรายการสำเร็จ</span>
+    </div>
+
+    <script>
+        /**
+         * Frontend Architecture:
+         * - State: เก็บข้อมูล Data ไว้ฝั่ง Client
+         * - Logic: คำนวณต่างๆ
+         * - UI: จัดการ DOM และ Chart
+         * - App: ตัวควบคุมหลัก (Controller)
+         */
+
+        const State = {
+            data: [],
+            currentMonthIndex: 0, // คำนวณจากเดือนปัจจุบัน (ต.ค. = 0)
+            reportFilter: 'pending', // pending, done
+            charts: {}
+        };
+
+        const Logic = {
+            initFiscalMonth: function() {
+                const date = new Date();
+                const jsMonth = date.getMonth(); // 0-11
+                State.currentMonthIndex = (jsMonth >= 9) ? jsMonth - 9 : jsMonth + 3;
+                
+                const thaiMonths = ["ต.ค.", "พ.ย.", "ธ.ค.", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย."];
+                document.getElementById('report-month-label').innerText = `รายงานผลประจำเดือน ${thaiMonths[State.currentMonthIndex]} (ปีงบฯ 2569)`;
+            },
+            
+            getDashboardStats: function() {
+                const d = State.data;
+                const total = d.length;
+                let planAcc = 0;
+                let resultAcc = 0;
+                
+                // คำนวณสะสมตั้งแต่เดือนแรกถึงเดือนปัจจุบัน
+                d.forEach(item => {
+                    const hasPlan = item.plan.slice(0, State.currentMonthIndex + 1).some(p => p > 0);
+                    const hasResult = item.result.slice(0, State.currentMonthIndex + 1).some(r => r > 0);
+                    if (hasPlan) planAcc++;
+                    if (hasResult) resultAcc++;
+                });
+
+                const progress = planAcc === 0 ? 0 : (resultAcc / planAcc) * 100;
+                return { total, planAcc, resultAcc, progress };
+            },
+
+            getQuarterlyData: function() {
+                // จัดกลุ่มตามไตรมาส Q1(0-2), Q2(3-5), Q3(6-8), Q4(9-11)
+                const qPlan = [0,0,0,0];
+                const qResult = [0,0,0,0];
+
+                State.data.forEach(item => {
+                    for(let q=0; q<4; q++) {
+                        const start = q * 3;
+                        const end = start + 3;
+                        if (item.plan.slice(start, end).some(p => p > 0)) qPlan[q]++;
+                        if (item.result.slice(start, end).some(r => r > 0)) qResult[q]++;
+                    }
+                });
+                return { plan: qPlan, result: qResult };
+            }
+        };
+
+        const UI = {
+            hideLoading: () => {
+                const el = document.getElementById('loading-overlay');
+                el.style.opacity = '0';
+                setTimeout(() => el.classList.add('hidden'), 300);
+            },
+            
+            showToast: (msg, type = 'success') => {
+                const toast = document.getElementById('toast');
+                const icon = document.getElementById('toast-icon');
+                document.getElementById('toast-msg').innerText = msg;
+                
+                icon.className = type === 'success' ? 'ph-fill ph-check-circle text-emerald-400 text-xl mr-3' : 'ph-fill ph-warning-circle text-red-400 text-xl mr-3';
+                
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+            },
+
+            navigate: (viewId) => {
+                // จัดการ Active Menu
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('bg-emerald-50', 'text-emerald-700');
+                    btn.classList.add('text-slate-500');
+                });
+                event.currentTarget.classList.remove('text-slate-500');
+                event.currentTarget.classList.add('bg-emerald-50', 'text-emerald-700');
+
+                // จัดการ View
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+                if(viewId === 'dashboard') UI.renderDashboard();
+                if(viewId === 'report') UI.renderReportList();
+            },
+
+            renderDashboard: () => {
+                const stats = Logic.getDashboardStats();
+                
+                // Animation สำหรับตัวเลข
+                document.getElementById('kpi-progress').innerText = `${stats.progress.toFixed(1)}%`;
+                document.getElementById('kpi-total').innerText = stats.total;
+                document.getElementById('kpi-plan').innerText = stats.planAcc;
+                document.getElementById('kpi-result').innerText = stats.resultAcc;
+
+                // Render Charts
+                UI.renderQuarterChart();
+                UI.renderCategoryChart();
+            },
+
+            renderQuarterChart: () => {
+                const ctx = document.getElementById('quarterChart').getContext('2d');
+                const data = Logic.getQuarterlyData();
+
+                if(State.charts.quarter) State.charts.quarter.destroy();
+                
+                State.charts.quarter = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Q1 (ต.ค.-ธ.ค.)', 'Q2 (ม.ค.-มี.ค.)', 'Q3 (เม.ย.-มิ.ย.)', 'Q4 (ก.ค.-ก.ย.)'],
+                        datasets: [
+                            { label: 'แผนงาน', data: data.plan, backgroundColor: '#cbd5e1', borderRadius: 4 },
+                            { label: 'ผลสำเร็จ', data: data.result, backgroundColor: '#059669', borderRadius: 4 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            },
+
+            renderCategoryChart: () => {
+                const ctx = document.getElementById('categoryChart').getContext('2d');
+                const counts = {};
+                State.data.forEach(item => { counts[item.category] = (counts[item.category] || 0) + 1; });
+
+                if(State.charts.category) State.charts.category.destroy();
+                
+                State.charts.category = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(counts),
+                        datasets: [{ data: Object.values(counts), backgroundColor: ['#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'], borderWidth: 0 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+            },
+
+            filterReport: (type) => {
+                State.reportFilter = type;
+                const btnP = document.getElementById('btn-filter-pending');
+                const btnD = document.getElementById('btn-filter-done');
+                
+                if(type === 'pending') {
+                    btnP.className = "px-4 py-1.5 text-sm font-medium rounded-md bg-white shadow text-slate-800";
+                    btnD.className = "px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 hover:text-slate-700";
+                } else {
+                    btnD.className = "px-4 py-1.5 text-sm font-medium rounded-md bg-white shadow text-slate-800";
+                    btnP.className = "px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 hover:text-slate-700";
+                }
+                UI.renderReportList();
+            },
+
+            renderReportList: () => {
+                const container = document.getElementById('report-list');
+                container.innerHTML = '';
+
+                const filtered = State.data.filter(item => {
+                    const hasPlan = item.plan[State.currentMonthIndex] === 1;
+                    const hasResult = item.result[State.currentMonthIndex] === 1;
+                    
+                    if (State.reportFilter === 'pending') return hasPlan && !hasResult;
+                    return hasResult; // done
+                });
+
+                if(filtered.length === 0) {
+                    container.innerHTML = `<div class="p-8 text-center text-slate-400 border border-dashed border-slate-200 rounded-xl">ไม่มีรายการในหมวดหมู่นี้</div>`;
+                    return;
+                }
+
+                filtered.forEach(item => {
+                    const btnHtml = State.reportFilter === 'pending' 
+                        ? `<button onclick="UI.openModal('${item.id}')" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">บันทึกผล</button>`
+                        : `<span class="bg-slate-100 text-slate-500 px-4 py-2 rounded-lg text-sm font-semibold"><i class="ph-bold ph-check mr-1"></i>ดำเนินการแล้ว</span>`;
+
+                    const html = `
+                        <div class="glass-card p-5 border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
+                            <div class="flex-1">
+                                <span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded uppercase tracking-wider">${item.category}</span>
+                                <h4 class="text-base font-bold text-slate-800 mt-2">${item.activity}</h4>
+                                <div class="flex items-center text-xs text-slate-500 mt-1 space-x-3">
+                                    <span><i class="ph-fill ph-buildings text-slate-400"></i> ${item.mainUnit}</span>
+                                    ${item.supportUnit ? `<span><i class="ph-fill ph-users text-teal-400"></i> ร่วมกับ: ${item.supportUnit}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="shrink-0">
+                                ${btnHtml}
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+            },
+
+            openModal: (id) => {
+                const item = State.data.find(d => d.id === id);
+                if(!item) return;
+
+                document.getElementById('form-row-id').value = item.id;
+                document.getElementById('form-activity-name').innerText = item.activity;
+                document.getElementById('form-details').value = item.details || '';
+                document.getElementById('form-reason').value = item.reason || '';
+
+                const modal = document.getElementById('modal-report');
+                const content = document.getElementById('modal-report-content');
+                modal.classList.remove('hidden');
+                // Trigger reflow
+                void modal.offsetWidth;
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            },
+
+            closeModal: () => {
+                const modal = document.getElementById('modal-report');
+                const content = document.getElementById('modal-report-content');
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        };
+
+        const App = {
+            init: () => {
+                Logic.initFiscalMonth();
+                App.fetchData();
+            },
+
+            fetchData: () => {
+                const overlay = document.getElementById('loading-overlay');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+
+                // Call GAS API
+                google.script.run
+                    .withSuccessHandler(res => {
+                        try {
+                            const response = JSON.parse(res);
+                            if(response.status === 'success') {
+                                State.data = response.data;
+                                UI.renderDashboard();
+                                UI.renderReportList();
+                                UI.hideLoading();
+                            } else {
+                                throw new Error(response.message);
+                            }
+                        } catch (e) {
+                            UI.showToast("การโหลดข้อมูลผิดพลาด: " + e.message, 'error');
+                            UI.hideLoading();
+                        }
+                    })
+                    .withFailureHandler(err => {
+                        UI.showToast("เชื่อมต่อเซิร์ฟเวอร์ล้มเหลว", 'error');
+                        UI.hideLoading();
+                    })
+                    .apiFetchDashboardData();
+            },
+
+            refreshData: () => { App.fetchData(); },
+
+            submitReport: (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btn-submit');
+                const ogText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loader !w-5 !h-5 !border-2 !border-emerald-200 !border-t-white mr-2"></div> กำลังบันทึก...';
+
+                const payload = {
+                    rowId: document.getElementById('form-row-id').value,
+                    details: document.getElementById('form-details').value,
+                    reason: document.getElementById('form-reason').value,
+                    currentMonthIndex: State.currentMonthIndex,
+                    userName: "เจ้าหน้าที่ GRC" // ตัวอย่าง (ปกติควรดึงจาก Auth Context)
+                };
+
+                google.script.run
+                    .withSuccessHandler(res => {
+                        btn.disabled = false;
+                        btn.innerHTML = ogText;
+                        const response = JSON.parse(res);
+                        
+                        if(response.status === 'success') {
+                            UI.closeModal();
+                            UI.showToast('บันทึกผลสำเร็จ');
+                            App.fetchData(); // Reload ข้อมูลใหม่
+                        } else {
+                            UI.showToast(response.message, 'error');
+                        }
+                    })
+                    .withFailureHandler(err => {
+                        btn.disabled = false;
+                        btn.innerHTML = ogText;
+                        UI.showToast("บันทึกไม่สำเร็จ: " + err.message, 'error');
+                    })
+                    .apiSubmitReport(payload);
+            }
+        };
+
+        // Bootstrap App
+        document.addEventListener('DOMContentLoaded', App.init);
+    </script>
 </body>
 </html>
